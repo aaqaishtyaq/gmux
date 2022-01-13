@@ -5,6 +5,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 var version = "[dev]"
@@ -18,12 +21,12 @@ Options:
 	-a, --attach %s
 	-d, --debug %s
 Commands:
-	// list    list available project configurations
-	// edit    edit project configuration
-	// new     new project configuration
+	list    list available project configurations
+	edit    edit project configuration
+	new     new project configuration
 	start   start project session
-	// stop    stop project session
-	// print   session configuration to stdout
+	stop    stop project session
+	print   session configuration to stdout
 Examples:
 	$ hr list
 	$ hr edit blog
@@ -98,5 +101,52 @@ func main() {
 			hr.Stop(config, options, context)
 			os.Exit(1)
 		}
+
+	case CommandStop:
+		if len(options.Windows) == 0 {
+			fmt.Println("Terminating session...")
+		} else {
+			fmt.Println("Killing windows...")
+		}
+		config, err := GetConfig(configPath, options.Settings)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+
+		err = hr.Stop(config, options, context)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+
+	case CommandNew, CommandEdit:
+		err := EditConfig(configPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+	case CommandList:
+		configs, err := ListConfigs(userConfigDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+
+		fmt.Println(strings.Join(configs, "\n"))
+	case CommandPrint:
+		config, err := hr.GetConfigFromSession(options, context)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+
+		d, err := yaml.Marshal(&config)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+
+		fmt.Println(string(d))
 	}
 }
