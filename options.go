@@ -35,7 +35,7 @@ const (
 	WindowsUsage = "List of windows to start. If session exists, those windows will be attached to current session."
 	AttachUsage  = "Force switch client for a session"
 	DetachUsage  = "Detach tmux session. The same as -d flag in the tmux"
-	DebugUsage   = "Print all commands to ~/.config/hr/hr.log"
+	DebugUsage   = "Print all commands to ~/.config/gomux/gomux.log"
 	FileUsage    = "A custom path to a config file"
 )
 

@@ -1,4 +1,4 @@
-module github.com/aaqaishtyaq/hr
+module github.com/aaqaishtyaq/gomux
 
 go 1.17
 

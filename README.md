@@ -1,2 +1,3 @@
-# hr-space
-Manage hr devspace with ease
+# gomux
+
+Tmux session manager.
