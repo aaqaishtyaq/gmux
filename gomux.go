@@ -37,17 +37,17 @@ func ExpandPath(path string) string {
 	return path
 }
 
-type HR struct {
+type goMux struct {
 	tmux     Tmux
 	executor Executor
 }
 
-func (hr HR) execShellCommands(commands []string, path string) error {
+func (gomux goMux) execShellCommands(commands []string, path string) error {
 	for _, c := range commands {
 		cmd := exec.Command("/bin/sh", "-c", c)
 		cmd.Dir = path
 
-		_, err := hr.executor.Exec(cmd)
+		_, err := gomux.executor.Exec(cmd)
 		if err != nil {
 			return err
 		}
@@ -55,9 +55,9 @@ func (hr HR) execShellCommands(commands []string, path string) error {
 	return nil
 }
 
-func (hr HR) setEnvVar(target string, env map[string]string) error {
+func (gomux goMux) setEnvVar(target string, env map[string]string) error {
 	for key, value := range env {
-		_, err := hr.tmux.SetEnv(target, key, value)
+		_, err := gomux.tmux.SetEnv(target, key, value)
 		if err != nil {
 			return err
 		}
@@ -66,30 +66,30 @@ func (hr HR) setEnvVar(target string, env map[string]string) error {
 	return nil
 }
 
-func (hr HR) switchOrAttach(target string, attach bool, insideTmuxSession bool) error {
+func (gomux goMux) switchOrAttach(target string, attach bool, insideTmuxSession bool) error {
 	if insideTmuxSession && attach {
-		return hr.tmux.SwitchClient(target)
+		return gomux.tmux.SwitchClient(target)
 	} else if !insideTmuxSession {
-		return hr.tmux.Attach(target, os.Stdin, os.Stdout, os.Stderr)
+		return gomux.tmux.Attach(target, os.Stdin, os.Stdout, os.Stderr)
 	}
 	return nil
 }
 
-func (hr HR) Stop(config Config, options Options, context Context) error {
+func (gomux goMux) Stop(config Config, options Options, context Context) error {
 	windows := options.Windows
 	if len(windows) == 0 {
 		sessionRoot := ExpandPath(config.Root)
 
-		err := hr.execShellCommands(config.Stop, sessionRoot)
+		err := gomux.execShellCommands(config.Stop, sessionRoot)
 		if err != nil {
 			return err
 		}
-		_, err = hr.tmux.StopSession(config.Session)
+		_, err = gomux.tmux.StopSession(config.Session)
 		return err
 	}
 
 	for _, w := range windows {
-		err := hr.tmux.KillWindow(config.Session + ":" + w)
+		err := gomux.tmux.KillWindow(config.Session + ":" + w)
 		if err != nil {
 			return err
 		}
@@ -98,9 +98,9 @@ func (hr HR) Stop(config Config, options Options, context Context) error {
 	return nil
 }
 
-func (hr HR) Start(config Config, options Options, context Context) error {
+func (gomux goMux) Start(config Config, options Options, context Context) error {
 	sessionName := config.Session + ":"
-	sessionExists := hr.tmux.SessionExists(sessionName)
+	sessionExists := gomux.tmux.SessionExists(sessionName)
 	sessionRoot := ExpandPath(config.Root)
 
 	windows := options.Windows
@@ -112,22 +112,22 @@ func (hr HR) Start(config Config, options Options, context Context) error {
 	}
 
 	if !sessionExists {
-		err := hr.execShellCommands(config.BeforeStart, sessionRoot)
+		err := gomux.execShellCommands(config.BeforeStart, sessionRoot)
 		if err != nil {
 			return err
 		}
 
-		_, err = hr.tmux.NewSession(config.Session, sessionRoot, defaultWindowName)
+		_, err = gomux.tmux.NewSession(config.Session, sessionRoot, defaultWindowName)
 		if err != nil {
 			return err
 		}
 
-		err = hr.setEnvVar(config.Session, config.Env)
+		err = gomux.setEnvVar(config.Session, config.Env)
 		if err != nil {
 			return err
 		}
 	} else if len(windows) == 0 {
-		return hr.switchOrAttach(sessionName, attach, context.InsideTmuxSession)
+		return gomux.switchOrAttach(sessionName, attach, context.InsideTmuxSession)
 	}
 
 	for _, w := range config.Windows {
@@ -140,13 +140,13 @@ func (hr HR) Start(config Config, options Options, context Context) error {
 			windowRoot = filepath.Join(sessionRoot, w.Root)
 		}
 
-		window, err := hr.tmux.NewWindow(sessionName, w.Name, windowRoot)
+		window, err := gomux.tmux.NewWindow(sessionName, w.Name, windowRoot)
 		if err != nil {
 			return err
 		}
 
 		for _, c := range w.Commands {
-			err := hr.tmux.SendKeys(window, c)
+			err := gomux.tmux.SendKeys(window, c)
 			if err != nil {
 				return err
 			}
@@ -158,21 +158,21 @@ func (hr HR) Start(config Config, options Options, context Context) error {
 				paneRoot = filepath.Join(windowRoot, p.Root)
 			}
 
-			newPane, err := hr.tmux.SplitWindow(window, p.Type, paneRoot)
+			newPane, err := gomux.tmux.SplitWindow(window, p.Type, paneRoot)
 
 			if err != nil {
 				return err
 			}
 
 			for _, c := range p.Commands {
-				err = hr.tmux.SendKeys(window+"."+newPane, c)
+				err = gomux.tmux.SendKeys(window+"."+newPane, c)
 				if err != nil {
 					return err
 				}
 			}
 
 			if pIndex+1 >= rebalancePanesThreshold {
-				_, err = hr.tmux.SelectLayout(window, Tiled)
+				_, err = gomux.tmux.SelectLayout(window, Tiled)
 				if err != nil {
 					return err
 				}
@@ -185,38 +185,45 @@ func (hr HR) Start(config Config, options Options, context Context) error {
 			layout = EvenHorizontal
 		}
 
-		_, err = hr.tmux.SelectLayout(window, layout)
+		_, err = gomux.tmux.SelectLayout(window, layout)
 		if err != nil {
 			return err
 		}
 	}
 
-	hr.tmux.KillWindow(sessionName + defaultWindowName)
-	hr.tmux.RenumberWindows(sessionName)
+	err := gomux.tmux.KillWindow(sessionName + defaultWindowName)
+	if err != nil {
+		return err
+	}
+
+	err = gomux.tmux.RenumberWindows(sessionName)
+	if err != nil {
+		return err
+	}
 
 	if len(windows) == 0 && len(config.Windows) > 0 && !options.Detach {
-		return hr.switchOrAttach(sessionName+config.Windows[0].Name, attach, context.InsideTmuxSession)
+		return gomux.switchOrAttach(sessionName+config.Windows[0].Name, attach, context.InsideTmuxSession)
 	}
 
 	return nil
 }
 
-func (hr HR) GetConfigFromSession(options Options, context Context) (Config, error) {
+func (gomux goMux) GetConfigFromSession(options Options, context Context) (Config, error) {
 	config := Config{}
 
-	tmuxSession, err := hr.tmux.SessionName()
+	tmuxSession, err := gomux.tmux.SessionName()
 	if err != nil {
 		return Config{}, err
 	}
 	config.Session = tmuxSession
 
-	tmuxWindows, err := hr.tmux.ListWindows(options.Project)
+	tmuxWindows, err := gomux.tmux.ListWindows(options.Project)
 	if err != nil {
 		return Config{}, err
 	}
 
 	for _, w := range tmuxWindows {
-		tmuxPanes, err := hr.tmux.ListPanes(options.Project + ":" + w.Id)
+		tmuxPanes, err := gomux.tmux.ListPanes(options.Project + ":" + w.Id)
 		if err != nil {
 			return Config{}, err
 		}
