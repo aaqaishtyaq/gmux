@@ -12,14 +12,19 @@ import (
 
 var version = "[dev]"
 
-var usage = fmt.Sprintf(`gomux - session manager for tmux. Version %s
+var usage = fmt.Sprintf(`gmux - session manager for tmux. Version %s
+
 Usage:
-	gomux <command> [<project>] [-f, --file <file>] [-w, --windows <window>]... [-a, --attach] [-d, --debug] [<key>=<value>]...
+	gmux <command> [<project>] [-f, --file <file>] [-w, --windows <window>]... [-a, --attach] [-d, --debug] [--detach] [-i, --inside-current-session] [<key>=<value>]...
+
 Options:
 	-f, --file %s
 	-w, --windows %s
 	-a, --attach %s
+	-i, --inside-current-session %s
 	-d, --debug %s
+	--detach %s
+
 Commands:
 	list    list available project configurations
 	edit    edit project configuration
@@ -27,18 +32,19 @@ Commands:
 	start   start project session
 	stop    stop project session
 	print   session configuration to stdout
-Examples:
-	$ gomux list
-	$ gomux edit blog
-	$ gomux new blog
-	$ gomux start blog
-	$ gomux start blog:win1
-	$ gomux start blog -w win1
-	$ gomux start blog:win1,win2
-	$ gomux stop blog
-	$ gomux start blog --attach
-	$ gomux print > ~/.config/gomux/blog.yml
-`, version, FileUsage, WindowsUsage, AttachUsage, DebugUsage)
+
+	Examples:
+	$ gmux list
+	$ gmux edit work
+	$ gmux new work
+	$ gmux start work
+	$ gmux start work:win1
+	$ gmux start work -w win1
+	$ gmux start work:win1,win2
+	$ gmux stop work
+	$ gmux start work --attach
+	$ gmux print > ~/.config/gmux/work.yml
+`, version, FileUsage, WindowsUsage, AttachUsage, InsideCurrentSessionUsage, DebugUsage, DetachUsage)
 
 func main() {
 	options, err := ParseOptions(os.Args[1:], func() {
@@ -59,7 +65,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	userConfigDir := filepath.Join(ExpandPath("~/"), ".config/gomux")
+	userConfigDir := filepath.Join(ExpandPath("~/"), ".config/gmux")
 
 	var configPath string
 	if options.Config != "" {
@@ -70,7 +76,7 @@ func main() {
 
 	var logger *log.Logger
 	if options.Debug {
-		logFile, err := os.Create(filepath.Join(userConfigDir, "gomux.log"))
+		logFile, err := os.Create(filepath.Join(userConfigDir, "gmux.log"))
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
 		}
@@ -79,7 +85,7 @@ func main() {
 
 	executor := DefaultExecutor{logger}
 	tmux := Tmux{executor}
-	gomux := goMux{tmux, executor}
+	gmux := Gmux{tmux, executor}
 	context := CreateContext()
 
 	switch options.Command {
@@ -95,10 +101,10 @@ func main() {
 			os.Exit(1)
 		}
 
-		err = gomux.Start(config, options, context)
+		err = gmux.Start(config, options, context)
 		if err != nil {
 			fmt.Println("Oops, an error occurred! Rolling back...")
-			_ = gomux.Stop(config, options, context)
+			_ = gmux.Stop(config, options, context)
 			os.Exit(1)
 		}
 
@@ -114,7 +120,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		err = gomux.Stop(config, options, context)
+		err = gmux.Stop(config, options, context)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
@@ -135,7 +141,7 @@ func main() {
 
 		fmt.Println(strings.Join(configs, "\n"))
 	case CommandPrint:
-		config, err := gomux.GetConfigFromSession(options, context)
+		config, err := gmux.GetConfigFromSession(options, context)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)

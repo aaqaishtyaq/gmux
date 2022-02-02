@@ -1,3 +1,3 @@
-# gomux
+# gmux
 
 Tmux session manager.

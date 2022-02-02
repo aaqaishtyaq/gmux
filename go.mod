@@ -1,4 +1,4 @@
-module github.com/aaqaishtyaq/gomux
+module github.com/aaqaishtyaq/gmux
 
 go 1.17
 
