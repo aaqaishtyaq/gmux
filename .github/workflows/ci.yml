@@ -1,0 +1,39 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - trunk
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go: ["1.17"]
+        os: [ubuntu-latest, macOS-latest]
+    name: Go ${{ matrix.go }} in ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+    - name: Environment
+      run: |
+        go version
+        go env
+    - name: Install tools
+      env:
+        GO111MODULE: on
+      run: |
+        go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.0
+        golangci-lint --version
+    - name: Lint
+      run: |
+        go mod tidy
+        golangci-lint run ./... -v
+    - name: Test
+      env:
+        GOFLAGS: -mod=mod
+      run: go test -race -coverpkg=./... -coverprofile=coverage.txt ./...

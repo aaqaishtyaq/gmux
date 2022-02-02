@@ -15,10 +15,10 @@ var usageTestTable = []struct {
 	helpCalls int
 }{
 	{
-		[]string{"start", "gomux"},
+		[]string{"start", "gmux"},
 		Options{
 			Command:  "start",
-			Project:  "gomux",
+			Project:  "gmux",
 			Config:   "",
 			Windows:  []string{},
 			Attach:   false,
@@ -30,10 +30,10 @@ var usageTestTable = []struct {
 		0,
 	},
 	{
-		[]string{"start", "gomux", "-w", "foo"},
+		[]string{"start", "gmux", "-w", "foo"},
 		Options{
 			Command:  "start",
-			Project:  "gomux",
+			Project:  "gmux",
 			Config:   "",
 			Windows:  []string{"foo"},
 			Attach:   false,
@@ -45,10 +45,10 @@ var usageTestTable = []struct {
 		0,
 	},
 	{
-		[]string{"start", "gomux:foo,bar"},
+		[]string{"start", "gmux:foo,bar"},
 		Options{
 			Command:  "start",
-			Project:  "gomux",
+			Project:  "gmux",
 			Config:   "",
 			Windows:  []string{"foo", "bar"},
 			Attach:   false,
@@ -60,10 +60,10 @@ var usageTestTable = []struct {
 		0,
 	},
 	{
-		[]string{"start", "gomux", "--attach", "--debug", "--detach"},
+		[]string{"start", "gmux", "--attach", "--debug", "--detach"},
 		Options{
 			Command:  "start",
-			Project:  "gomux",
+			Project:  "gmux",
 			Config:   "",
 			Windows:  []string{},
 			Attach:   true,
@@ -75,10 +75,10 @@ var usageTestTable = []struct {
 		0,
 	},
 	{
-		[]string{"start", "gomux", "-ad"},
+		[]string{"start", "gmux", "-ad"},
 		Options{
 			Command:  "start",
-			Project:  "gomux",
+			Project:  "gmux",
 			Config:   "",
 			Windows:  []string{},
 			Attach:   true,
