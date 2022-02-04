@@ -5,6 +5,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/aaqaishtyaq/gmux/config"
+	"github.com/aaqaishtyaq/gmux/executor"
+	"github.com/aaqaishtyaq/gmux/tmux"
 )
 
 const defaultWindowName = "gomux_def"
@@ -38,8 +42,8 @@ func ExpandPath(path string) string {
 }
 
 type Gmux struct {
-	tmux     Tmux
-	executor Executor
+	tmux     tmux.Tmux
+	executor executor.Executor
 }
 
 func (gmux Gmux) execShellCommands(commands []string, path string) error {
@@ -76,7 +80,7 @@ func (gmux Gmux) switchOrAttach(target string, attach bool, insideTmuxSession bo
 	return nil
 }
 
-func (gmux Gmux) Stop(config Config, options Options, context Context) error {
+func (gmux Gmux) Stop(config config.Config, options Options, context Context) error {
 	windows := options.Windows
 	if len(windows) == 0 {
 		sessionRoot := ExpandPath(config.Root)
@@ -99,7 +103,7 @@ func (gmux Gmux) Stop(config Config, options Options, context Context) error {
 	return nil
 }
 
-func (gmux Gmux) Start(config Config, options Options, context Context) error {
+func (gmux Gmux) Start(config config.Config, options Options, context Context) error {
 	sessionName := config.Session + ":"
 	sessionExists := gmux.tmux.SessionExists(sessionName)
 	sessionRoot := ExpandPath(config.Root)
@@ -173,7 +177,7 @@ func (gmux Gmux) Start(config Config, options Options, context Context) error {
 			}
 
 			if pIndex+1 >= rebalancePanesThreshold {
-				_, err = gmux.tmux.SelectLayout(window, Tiled)
+				_, err = gmux.tmux.SelectLayout(window, tmux.Tiled)
 				if err != nil {
 					return err
 				}
@@ -183,9 +187,9 @@ func (gmux Gmux) Start(config Config, options Options, context Context) error {
 
 		layout := w.Layout
 		switch layout {
-		case EvenHorizontal, EvenVertical, MainHorizontal, MainVertical:
+		case tmux.EvenHorizontal, tmux.EvenVertical, tmux.MainHorizontal, tmux.MainVertical:
 		default:
-			layout = EvenHorizontal
+			layout = tmux.EvenHorizontal
 		}
 
 		_, err = gmux.tmux.SelectLayout(window, layout)
@@ -213,38 +217,38 @@ func (gmux Gmux) Start(config Config, options Options, context Context) error {
 	return nil
 }
 
-func (gmux Gmux) GetConfigFromSession(options Options, context Context) (Config, error) {
-	config := Config{}
+func (gmux Gmux) GetConfigFromSession(options Options, context Context) (config.Config, error) {
+	conf := config.Config{}
 
 	tmuxSession, err := gmux.tmux.SessionName()
 	if err != nil {
-		return Config{}, err
+		return config.Config{}, err
 	}
-	config.Session = tmuxSession
+	conf.Session = tmuxSession
 
 	tmuxWindows, err := gmux.tmux.ListWindows(options.Project)
 	if err != nil {
-		return Config{}, err
+		return config.Config{}, err
 	}
 
 	for _, w := range tmuxWindows {
 		tmuxPanes, err := gmux.tmux.ListPanes(options.Project + ":" + w.Id)
 		if err != nil {
-			return Config{}, err
+			return config.Config{}, err
 		}
 
-		panes := []Pane{}
+		panes := []config.Pane{}
 		for _, p := range tmuxPanes {
 			root := p.Root
 			if root == w.Root {
 				root = ""
 			}
-			panes = append(panes, Pane{
+			panes = append(panes, config.Pane{
 				Root: root,
 			})
 		}
 
-		config.Windows = append(config.Windows, Window{
+		conf.Windows = append(conf.Windows, config.Window{
 			Name:   w.Name,
 			Layout: w.Layout,
 			Root:   w.Root,
@@ -252,5 +256,5 @@ func (gmux Gmux) GetConfigFromSession(options Options, context Context) (Config,
 		})
 	}
 
-	return config, nil
+	return conf, nil
 }

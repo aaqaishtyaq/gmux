@@ -1,9 +1,11 @@
-package main
+package tmux
 
 import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/aaqaishtyaq/gmux/executor"
 )
 
 const (
@@ -20,7 +22,7 @@ const (
 )
 
 type Tmux struct {
-	executor Executor
+	Executor executor.Executor
 }
 
 type TmuxWindow struct {
@@ -36,30 +38,30 @@ type TmuxPane struct {
 
 func (tmux Tmux) NewSession(name string, root string, windowName string) (string, error) {
 	cmd := exec.Command("tmux", "new", "-Pd", "-s", name, "-n", windowName, "-c", root)
-	return tmux.executor.Exec(cmd)
+	return tmux.Executor.Exec(cmd)
 }
 
 func (tmux Tmux) SessionExists(name string) bool {
 	cmd := exec.Command("tmux", "has-session", "-t", name)
-	res, err := tmux.executor.Exec(cmd)
+	res, err := tmux.Executor.Exec(cmd)
 	return res == "" && err == nil
 }
 
 func (tmux Tmux) KillWindow(target string) error {
 	cmd := exec.Command("tmux", "kill-window", "-t", target)
-	_, err := tmux.executor.Exec(cmd)
+	_, err := tmux.Executor.Exec(cmd)
 	return err
 }
 
 func (tmux Tmux) NewWindow(target string, name string, root string) (string, error) {
 	cmd := exec.Command("tmux", "neww", "-Pd", "-t", target, "-c", root, "-F", "#{window_id}", "-n", name)
 
-	return tmux.executor.Exec(cmd)
+	return tmux.Executor.Exec(cmd)
 }
 
 func (tmux Tmux) SendKeys(target string, command string) error {
 	cmd := exec.Command("tmux", "send-keys", "-t", target, command, "Enter")
-	return tmux.executor.ExecQuiet(cmd)
+	return tmux.Executor.ExecQuiet(cmd)
 }
 
 func (tmux Tmux) Attach(target string, stdin *os.File, stdout *os.File, stderr *os.File) error {
@@ -69,12 +71,12 @@ func (tmux Tmux) Attach(target string, stdin *os.File, stdout *os.File, stderr *
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
-	return tmux.executor.ExecQuiet(cmd)
+	return tmux.Executor.ExecQuiet(cmd)
 }
 
 func (tmux Tmux) RenumberWindows(target string) error {
 	cmd := exec.Command("tmux", "move-window", "-r", "-s", target, "-t", target)
-	_, err := tmux.executor.Exec(cmd)
+	_, err := tmux.Executor.Exec(cmd)
 	return err
 }
 
@@ -92,7 +94,7 @@ func (tmux Tmux) SplitWindow(target string, splitType string, root string) (stri
 
 	cmd := exec.Command("tmux", args...)
 
-	pane, err := tmux.executor.Exec(cmd)
+	pane, err := tmux.Executor.Exec(cmd)
 	if err != nil {
 		return "", err
 	}
@@ -102,28 +104,28 @@ func (tmux Tmux) SplitWindow(target string, splitType string, root string) (stri
 
 func (tmux Tmux) SelectLayout(target string, layoutType string) (string, error) {
 	cmd := exec.Command("tmux", "select-layout", "-t", target, layoutType)
-	return tmux.executor.Exec(cmd)
+	return tmux.Executor.Exec(cmd)
 }
 
 func (tmux Tmux) SetEnv(target string, key string, value string) (string, error) {
 	cmd := exec.Command("tmux", "setenv", "-t", target, key, value)
-	return tmux.executor.Exec(cmd)
+	return tmux.Executor.Exec(cmd)
 }
 
 func (tmux Tmux) StopSession(target string) (string, error) {
 	cmd := exec.Command("tmux", "kill-session", "-t", target)
-	return tmux.executor.Exec(cmd)
+	return tmux.Executor.Exec(cmd)
 }
 
 func (tmux Tmux) SwitchClient(target string) error {
 	cmd := exec.Command("tmux", "switch-client", "-t", target)
-	return tmux.executor.ExecQuiet(cmd)
+	return tmux.Executor.ExecQuiet(cmd)
 }
 
 func (tmux Tmux) SessionName() (string, error) {
 
 	cmd := exec.Command("tmux", "display-message", "-p", "#S")
-	sessionName, err := tmux.executor.Exec(cmd)
+	sessionName, err := tmux.Executor.Exec(cmd)
 
 	if err != nil {
 		return sessionName, err
@@ -136,7 +138,7 @@ func (tmux Tmux) ListWindows(target string) ([]TmuxWindow, error) {
 	var windows []TmuxWindow
 
 	cmd := exec.Command("tmux", "list-windows", "-F", "#{window_id};#{window_name};#{window_layout};#{pane_current_path}", "-t", target)
-	out, err := tmux.executor.Exec(cmd)
+	out, err := tmux.Executor.Exec(cmd)
 	if err != nil {
 		return windows, err
 	}
@@ -163,7 +165,7 @@ func (tmux Tmux) ListPanes(target string) ([]TmuxPane, error) {
 
 	cmd := exec.Command("tmux", "list-panes", "-F", "#{pane_current_path}", "-t", target)
 
-	out, err := tmux.executor.Exec(cmd)
+	out, err := tmux.Executor.Exec(cmd)
 	if err != nil {
 		return panes, err
 	}

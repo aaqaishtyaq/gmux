@@ -1,4 +1,4 @@
-package main
+package executor
 
 import (
 	"bytes"
@@ -83,6 +83,7 @@ func TestExecQuietError(t *testing.T) {
 
 	got := cmd.ProcessState.ExitCode()
 	if got != 1 {
+		fmt.Println(got)
 		t.Errorf("expected %d, got %d", 1, got)
 	}
 }
