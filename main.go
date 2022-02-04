@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/aaqaishtyaq/gmux/config"
+	"github.com/aaqaishtyaq/gmux/executor"
+	"github.com/aaqaishtyaq/gmux/tmux"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -83,8 +87,8 @@ func main() {
 		logger = log.New(logFile, "", 0)
 	}
 
-	executor := DefaultExecutor{logger}
-	tmux := Tmux{executor}
+	executor := executor.DefaultExecutor{Logger: logger}
+	tmux := tmux.Tmux{Executor: executor}
 	gmux := Gmux{tmux, executor}
 	context := CreateContext()
 
@@ -95,16 +99,16 @@ func main() {
 		} else {
 			fmt.Println("Starting new windows...")
 		}
-		config, err := GetConfig(configPath, options.Settings)
+		conf, err := config.GetConfig(configPath, options.Settings)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 
-		err = gmux.Start(config, options, context)
+		err = gmux.Start(conf, options, context)
 		if err != nil {
 			fmt.Println("Oops, an error occurred! Rolling back...")
-			_ = gmux.Stop(config, options, context)
+			_ = gmux.Stop(conf, options, context)
 			os.Exit(1)
 		}
 
@@ -114,26 +118,26 @@ func main() {
 		} else {
 			fmt.Println("Killing windows...")
 		}
-		config, err := GetConfig(configPath, options.Settings)
+		conf, err := config.GetConfig(configPath, options.Settings)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 
-		err = gmux.Stop(config, options, context)
+		err = gmux.Stop(conf, options, context)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 
 	case CommandNew, CommandEdit:
-		err := EditConfig(configPath)
+		err := config.EditConfig(configPath)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	case CommandList:
-		configs, err := ListConfigs(userConfigDir)
+		configs, err := config.ListConfigs(userConfigDir)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
@@ -141,13 +145,13 @@ func main() {
 
 		fmt.Println(strings.Join(configs, "\n"))
 	case CommandPrint:
-		config, err := gmux.GetConfigFromSession(options, context)
+		conf, err := gmux.GetConfigFromSession(options, context)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 
-		d, err := yaml.Marshal(&config)
+		d, err := yaml.Marshal(&conf)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)

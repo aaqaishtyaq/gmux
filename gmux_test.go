@@ -6,10 +6,13 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/aaqaishtyaq/gmux/config"
+	"github.com/aaqaishtyaq/gmux/tmux"
 )
 
 var testTable = map[string]struct {
-	config           Config
+	config           config.Config
 	options          Options
 	context          Context
 	startCommands    []string
@@ -17,11 +20,11 @@ var testTable = map[string]struct {
 	commanderOutputs []string
 }{
 	"test with 1 window": {
-		Config{
+		config.Config{
 			Session:     "test-session",
 			Root:        "~/root",
 			BeforeStart: []string{"command1", "command2"},
-			Windows: []Window{
+			Windows: []config.Window{
 				{
 					Name:     "win1",
 					Commands: []string{"command1"},
@@ -48,11 +51,11 @@ var testTable = map[string]struct {
 		[]string{"test-session", "win1"},
 	},
 	"test with 1 window and Detach: true": {
-		Config{
+		config.Config{
 			Session:     "test-session",
 			Root:        "root",
 			BeforeStart: []string{"command1", "command2"},
-			Windows: []Window{
+			Windows: []config.Window{
 				{
 					Name: "win1",
 				},
@@ -78,15 +81,15 @@ var testTable = map[string]struct {
 		[]string{"xyz"},
 	},
 	"test with multiple windows and panes": {
-		Config{
+		config.Config{
 			Session: "test-session",
 			Root:    "root",
-			Windows: []Window{
+			Windows: []config.Window{
 				{
 					Name:   "win1",
 					Manual: false,
 					Layout: "main-horizontal",
-					Panes: []Pane{
+					Panes: []config.Pane{
 						{
 							Type:     "horizontal",
 							Commands: []string{"command1"},
@@ -125,10 +128,10 @@ var testTable = map[string]struct {
 		[]string{"test-session", "test-session", "win1", "1"},
 	},
 	"test start windows from option's Windows parameter": {
-		Config{
+		config.Config{
 			Session: "test-session",
 			Root:    "root",
-			Windows: []Window{
+			Windows: []config.Window{
 				{
 					Name:   "win1",
 					Manual: false,
@@ -157,10 +160,10 @@ var testTable = map[string]struct {
 		[]string{"xyz"},
 	},
 	"test attach to the existing session": {
-		Config{
+		config.Config{
 			Session: "test-session",
 			Root:    "root",
-			Windows: []Window{
+			Windows: []config.Window{
 				{Name: "win1"},
 			},
 		},
@@ -176,7 +179,7 @@ var testTable = map[string]struct {
 		[]string{""},
 	},
 	"test start a new session from another tmux session": {
-		Config{
+		config.Config{
 			Session: "test-session",
 			Root:    "root",
 		},
@@ -194,10 +197,10 @@ var testTable = map[string]struct {
 		[]string{"xyz"},
 	},
 	"test switch a client from another tmux session": {
-		Config{
+		config.Config{
 			Session: "test-session",
 			Root:    "root",
-			Windows: []Window{
+			Windows: []config.Window{
 				{Name: "win1"},
 			},
 		},
@@ -213,10 +216,10 @@ var testTable = map[string]struct {
 		[]string{""},
 	},
 	"test create new windows in current session": {
-		Config{
+		config.Config{
 			Session: "test-session",
 			Root:    "root",
-			Windows: []Window{
+			Windows: []config.Window{
 				{Name: "win1"},
 			},
 		},
@@ -266,7 +269,7 @@ func TestStartStopSession(t *testing.T) {
 
 		t.Run("start session: "+testDescription, func(t *testing.T) {
 			executor := &MockExecutor{[]string{}, params.commanderOutputs}
-			tmux := Tmux{executor}
+			tmux := tmux.Tmux{Executor: executor}
 			gmux := Gmux{tmux, executor}
 
 			err := gmux.Start(params.config, params.options, params.context)
@@ -281,7 +284,7 @@ func TestStartStopSession(t *testing.T) {
 
 		t.Run("stop session: "+testDescription, func(t *testing.T) {
 			executor := &MockExecutor{[]string{}, params.commanderOutputs}
-			tmux := Tmux{executor}
+			tmux := tmux.Tmux{Executor: executor}
 			gmux := Gmux{tmux, executor}
 
 			err := gmux.Stop(params.config, params.options, params.context)
@@ -298,14 +301,14 @@ func TestStartStopSession(t *testing.T) {
 }
 
 func TestPrintCurrentSession(t *testing.T) {
-	expectedConfig := Config{
+	expectedConfig := config.Config{
 		Session: "session_name",
-		Windows: []Window{
+		Windows: []config.Window{
 			{
 				Name:   "win1",
 				Root:   "root",
 				Layout: "layout",
-				Panes: []Pane{
+				Panes: []config.Pane{
 					{},
 					{
 						Root: "/tmp",
@@ -320,7 +323,7 @@ func TestPrintCurrentSession(t *testing.T) {
 		"id1;win1;layout;root",
 		"root\n/tmp",
 	}}
-	tmux := Tmux{executor}
+	tmux := tmux.Tmux{Executor: executor}
 
 	gmux := Gmux{tmux, executor}
 
