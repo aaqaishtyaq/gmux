@@ -37,3 +37,6 @@ jobs:
       env:
         GOFLAGS: -mod=mod
       run: go test -race -coverpkg=./... -coverprofile=coverage.txt ./...
+    - name: Setup upterm session
+      uses: lhotari/action-upterm@v1
+
