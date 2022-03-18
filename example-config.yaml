@@ -1,0 +1,55 @@
+session: Work
+
+root: ~/Developer
+
+before_start:
+  - echo "kubectx k8s-worload-dev; kubens gmux"
+
+stop:
+  - echo "devspace run reset:all"
+
+windows:
+  - name: ZSH
+    commands:
+      - echo "ZSH Shell"
+
+  - name: BACKEND
+    root: backend-dir
+    layout: main-vertical
+    commands:
+      - echo "devspace run shell:all"
+    panes:
+      - type: horizontal
+        commands:
+          - echo "tail -f log/customlogs.log | grep -v -e health -e delete_workspace | jq -C -S"
+      - type: horizontal
+        commands:
+          - echo "devspace run start:all"
+      - type: horizontal
+        commands:
+          - echo "devspace run sync:logs"
+
+  - name: CONSOLE
+    root: backend-dir
+    commands:
+      - echo "devspace run shell:all; rails c"
+
+  - name: FE
+    root: frontend-dir
+    layout: main-vertical
+    commands:
+      - echo "devspace run start:all"
+    panes:
+      - type: horizontal
+        commands:
+          - echo "FRONTEND-ZSH-SHELL"
+      - type: horizontal
+        commands:
+          - echo "devspace run shell:all"
+      - type: horizontal
+        commands:
+          - echo "devspace run sync:logs"
+
+  - name: ZSH
+    commands:
+      - echo "ZSH Shell"
