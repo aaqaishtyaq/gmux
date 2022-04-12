@@ -1,4 +1,4 @@
-# gmux
+# gmux ![Gopher with tmux](https://github.com/dvit0/fsrv-cdn/raw/b7b656d9d06f4add2e4d72011e409472be40d826/files/go-tmux.png)
 
 Tmux session manager.
 Gmux automates your [tmux](https://github.com/tmux/tmux) workflow. You can create a single configuration file, and Gmux will create all the required windows and panes from it.
