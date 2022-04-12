@@ -14,12 +14,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var version = "[dev]"
+var version = "1.0.0"
 
 var usage = fmt.Sprintf(`gmux - session manager for tmux. Version %s
 
 Usage:
-	gmux <command> [<project>] [-f, --file <file>] [-w, --windows <window>]... [-a, --attach] [-d, --debug] [--detach] [-i, --inside-current-session] [<key>=<value>]...
+	gmux <command> [<project>] [-f, --file <file>] [-w, --windows <window>]... [-a, --attach]
+	[-d, --debug] [--detach] [-i, --inside-current-session] [<key>=<value>]...
 
 Options:
 	-f, --file %s
@@ -108,6 +109,7 @@ func main() {
 		err = gmux.Start(conf, options, context)
 		if err != nil {
 			fmt.Println("Oops, an error occurred! Rolling back...")
+			fmt.Fprint(os.Stderr, err.Error())
 			_ = gmux.Stop(conf, options, context)
 			os.Exit(1)
 		}
