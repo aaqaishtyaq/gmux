@@ -19,10 +19,10 @@ type Pane struct {
 type Window struct {
 	Name        string   `yaml:"name"`
 	Root        string   `yaml:"root,omitempty"`
-	BeforeStart []string `yaml:"before_start"`
-	Panes       []Pane   `yaml:"panes"`
+	BeforeStart []string `yaml:"before_start,omitempty"`
+	Panes       []Pane   `yaml:"panes,omitempty"`
 	Commands    []string `yaml:"commands"`
-	Layout      string   `yaml:"layout"`
+	Layout      string   `yaml:"layout,omitempty"`
 	Manual      bool     `yaml:"manual,omitempty"`
 }
 
