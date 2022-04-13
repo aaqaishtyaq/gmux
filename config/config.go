@@ -19,21 +19,21 @@ type Pane struct {
 type Window struct {
 	Name        string   `yaml:"name"`
 	Root        string   `yaml:"root,omitempty"`
-	BeforeStart []string `yaml:"before_start"`
-	Panes       []Pane   `yaml:"panes"`
+	BeforeStart []string `yaml:"before_start,omitempty"`
+	Panes       []Pane   `yaml:"panes,omitempty"`
 	Commands    []string `yaml:"commands"`
-	Layout      string   `yaml:"layout"`
+	Layout      string   `yaml:"layout,omitempty"`
 	Manual      bool     `yaml:"manual,omitempty"`
 }
 
 type Config struct {
 	Session                   string            `yaml:"session"`
-	Env                       map[string]string `yaml:"env"`
+	Env                       map[string]string `yaml:"env,omitempty"`
 	Root                      string            `yaml:"root"`
 	BeforeStart               []string          `yaml:"before_start"`
 	Stop                      []string          `yaml:"stop"`
 	Windows                   []Window          `yaml:"windows"`
-	RebalanceWindowsThreshold int               `yaml:"rebalance_panes_after"`
+	RebalanceWindowsThreshold int               `yaml:"rebalance_panes_after,omitempty"`
 }
 
 func EditConfig(path string) error {
@@ -83,7 +83,6 @@ func ParseConfig(data string, settings map[string]string) (Config, error) {
 func ListConfigs(dir string) ([]string, error) {
 	var result []string
 	files, err := ioutil.ReadDir(dir)
-
 	if err != nil {
 		return result, err
 	}

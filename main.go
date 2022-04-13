@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var version = "1.0.0"
+var version = "1.2.0"
 
 var usage = fmt.Sprintf(`gmux - session manager for tmux. Version %s
 

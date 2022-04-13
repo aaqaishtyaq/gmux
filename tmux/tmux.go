@@ -123,10 +123,8 @@ func (tmux Tmux) SwitchClient(target string) error {
 }
 
 func (tmux Tmux) SessionName() (string, error) {
-
 	cmd := exec.Command("tmux", "display-message", "-p", "#S")
 	sessionName, err := tmux.Executor.Exec(cmd)
-
 	if err != nil {
 		return sessionName, err
 	}
@@ -157,7 +155,6 @@ func (tmux Tmux) ListWindows(target string) ([]TmuxWindow, error) {
 	}
 
 	return windows, nil
-
 }
 
 func (tmux Tmux) ListPanes(target string) ([]TmuxPane, error) {
